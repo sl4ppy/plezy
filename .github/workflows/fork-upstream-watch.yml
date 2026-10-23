@@ -1,0 +1,74 @@
+# (fork) Daily check for a new upstream Plezy release, and for upstream merging the pre-roll PR.
+# Opens an issue in this fork (never touches upstream) with a trial rebase so we know how much work
+# the update is. See FORK.md "Moving to a new upstream release".
+name: Fork - upstream watch
+
+on:
+  schedule:
+    - cron: '23 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare with upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM: edde746/plezy
+          PREROLL_PR: '2483'
+        run: |
+          set -euo pipefail
+          base=$(sed -n 's/^version: \([0-9.]*\)-preroll.*/\1/p' pubspec.yaml)
+          latest=$(gh api "repos/$UPSTREAM/releases/latest" --jq .tag_name)
+          pr_merged=$(gh api "repos/$UPSTREAM/pulls/$PREROLL_PR" --jq .merged)
+          echo "fork base: $base, upstream latest: $latest, #$PREROLL_PR merged: $pr_merged"
+
+          # One issue per event, ever (closed ones count, so a handled update isn't reopened).
+          already() { [ -n "$(gh issue list --state all --search "\"$1\" in:title" --json number --jq '.[].number')" ]; }
+
+          if [ "$pr_merged" = "true" ]; then
+            title="Upstream merged pre-roll PR #$PREROLL_PR"
+            if ! already "$title"; then
+              gh issue create --title "$title" --body "edde746/plezy merged [#$PREROLL_PR](https://github.com/$UPSTREAM/pull/$PREROLL_PR). Once it ships in a release, the official app plays pre-rolls: switch back to it and retire this fork (FORK.md, step 2 of *Moving to a new upstream release*)."
+            fi
+          fi
+
+          [ "$latest" = "$base" ] && exit 0
+          title="Upstream Plezy $latest released (fork is on $base)"
+          already "$title" && exit 0
+
+          # Trial run of the documented sync: fork commits cherry-picked onto the new tag.
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git fetch -q "https://github.com/$UPSTREAM.git" "refs/tags/$base:refs/tags/$base" "refs/tags/$latest:refs/tags/$latest"
+          commits=$(git rev-list --reverse "$base..HEAD")
+          git checkout -q --detach "$latest"
+          result="All $(echo "$commits" | wc -l) fork commits cherry-pick cleanly onto \`$latest\`."
+          for c in $commits; do
+            if ! git cherry-pick "$c" >/dev/null 2>&1; then
+              files=$(git diff --name-only --diff-filter=U | sed 's/^/- `/; s/$/`/')
+              result="Cherry-pick stops at $(git log -1 --format='`%h` %s' "$c") with conflicts in:"$'\n'"$files"$'\n\n'"(Conflicts only in \`lib/i18n/strings*.g.dart\` are expected: take the tag's version, then \`dart run slang\`.)"
+              git cherry-pick --abort
+              break
+            fi
+          done
+
+          gh issue create --title "$title" --body "$(cat <<EOF
+          Upstream released [$latest](https://github.com/$UPSTREAM/releases/tag/$latest). This fork is based on \`$base\`.
+
+          **Trial rebase:** $result
+
+          **Pre-roll PR #$PREROLL_PR merged upstream:** $pr_merged$( [ "$pr_merged" = "true" ] && echo " — check whether $latest includes it; if so, use the official app instead.")
+
+          Next: follow FORK.md, *Moving to a new upstream release*.
+          EOF
+          )"
