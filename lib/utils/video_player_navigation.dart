@@ -338,7 +338,11 @@ Future<bool?> navigateToVideoPlayer(
   // build one and let the server prefix its configured pre-roll. Declining
   // returns null and playback continues below, unchanged. Skipped for
   // downloads and Watch Together, where a server-side queue has no meaning.
-  if (!skipCinemaExtras && !isOffline && watchTogetherLease == null && metadata.kind == MediaKind.movie) {
+  // (fork) 2.24.0 replaced the PR's `watchTogetherLease` with `watchTogetherCopy`;
+  // also skip while in any room so a host's own Play doesn't desync guests.
+  final inWatchTogether =
+      watchTogetherCopy != null || (context.read<WatchTogetherProvider?>()?.isInSession ?? false);
+  if (!skipCinemaExtras && !isOffline && !inWatchTogether && metadata.kind == MediaKind.movie) {
     final settings = await SettingsService.getInstance();
     if (settings.read(SettingsService.plexCinemaPreRoll) && metadata is PlexMediaItem) {
       if (!context.mounted || !launchCurrent()) return null;
