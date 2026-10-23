@@ -342,7 +342,11 @@ Future<bool?> navigateToVideoPlayer(
   // also skip while in any room so a host's own Play doesn't desync guests.
   final inWatchTogether =
       watchTogetherCopy != null || (context.read<WatchTogetherProvider?>()?.isInSession ?? false);
-  if (!skipCinemaExtras && !isOffline && !inWatchTogether && metadata.kind == MediaKind.movie) {
+  // (fork) Like Plex's own apps, only when the movie starts from the beginning:
+  // a resume (saved offset or explicit start position) goes straight in.
+  // "Play from beginning" arrives with viewOffsetMs = 0, so it still gets one.
+  final resuming = (initialPosition ?? Duration.zero) > Duration.zero || (metadata.viewOffsetMs ?? 0) > 0;
+  if (!skipCinemaExtras && !isOffline && !inWatchTogether && !resuming && metadata.kind == MediaKind.movie) {
     final settings = await SettingsService.getInstance();
     if (settings.read(SettingsService.plexCinemaPreRoll) && metadata is PlexMediaItem) {
       if (!context.mounted || !launchCurrent()) return null;
