@@ -110,6 +110,15 @@ extension _VideoPlayerPlaybackPromptMethods on VideoPlayerScreenState {
         return;
       }
 
+      // (fork) A server pre-roll (#970) arrives as a `clip` queue item ahead of
+      // the movie: go straight into the movie, the way Plex's own apps do,
+      // instead of offering "next in queue" with a countdown.
+      if (_currentMetadata.kind == MediaKind.clip && !serverStopped) {
+        _logVideoCompleted('action=presentNext preroll');
+        unawaited(_playNext());
+        return;
+      }
+
       // Capture keyboard mode before async gap
       final isKeyboardMode = PlatformDetector.isTV() && InputModeTracker.isKeyboardMode(context, listen: false);
 
