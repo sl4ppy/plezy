@@ -3,6 +3,11 @@
   Plezy
 </h1>
 
+> **This is a fork (branch `preroll`): Plezy 2.24.0 + Plex server pre-roll support
+> ([upstream #2483](https://github.com/edde746/plezy/pull/2483)), Android only, installed as "Plezy Pre-roll".
+> See [FORK.md](FORK.md) for what changed, how it is built and tested, and its limitations. Not affiliated with
+> the Plezy project.**
+
 A modern client for Plex, Jellyfin, and Emby on desktop, mobile, and TV. Built with Flutter for native performance and a clean interface.
 
 <p>
