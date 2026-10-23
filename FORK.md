@@ -158,6 +158,12 @@ Tests: `flutter test` (all) or `flutter test test/services/play_queue_launcher_t
 
 ## Moving to a new upstream release
 
+**How we find out:** `.github/workflows/fork-upstream-watch.yml` runs daily (and on demand from the Actions tab).
+When edde746/plezy publishes a release newer than the fork's base (read from `pubspec.yaml`), it opens an issue
+in this fork with a trial run of step 3 (where the cherry-pick stops and which files conflict). It opens a
+separate issue if upstream merges #2483. It only reads upstream; it never opens PRs or pushes anywhere. The
+owner's account also watches upstream for releases and is subscribed to #2483.
+
 1. `git fetch upstream --tags`
 2. If #2483 (or an equivalent) has been merged upstream: stop — use the official app.
 3. `git checkout -b preroll-<new> <new-tag>` and `git cherry-pick 2.24.0..preroll` (the five commits above,
