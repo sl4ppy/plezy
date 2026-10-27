@@ -2,9 +2,9 @@
 
 This is a personal fork of [edde746/plezy](https://github.com/edde746/plezy) that adds **Plex server pre-rolls**
 (the short clips Plex plays before a movie, set under *Settings → Extras → Cinema Trailers pre-roll video* on the
-server). Upstream Plezy 2.24.0 does not play them ([edde746/plezy#970](https://github.com/edde746/plezy/issues/970)).
+server). Upstream Plezy (2.25.0) does not play them ([edde746/plezy#970](https://github.com/edde746/plezy/issues/970)).
 
-It is upstream **2.24.0** plus the still-open upstream pull request
+It is upstream **2.25.0** plus the still-open upstream pull request
 [edde746/plezy#2483](https://github.com/edde746/plezy/pull/2483) by @torp93, plus a few fork fixes found while
 testing. Everything is on the **`preroll`** branch; `main` tracks upstream unchanged.
 
@@ -12,8 +12,8 @@ testing. Everything is on the **`preroll`** branch; `main` tracks upstream uncha
 > the official app again — this fork exists only to bridge that gap.
 
 - App name on the device: **Plezy Pre-roll** (`com.edde746.plezy.preroll`), installs **next to** official Plezy.
-- Android only (arm64-v8a). Built and tested on a Pixel 9 Pro XL (Android 17). Android TV (NVIDIA SHIELD) not
-  tested yet — see [Status](#status).
+- Android only (arm64-v8a). Built and tested on a Pixel 9 Pro XL (Android 17); in daily use on an NVIDIA SHIELD
+  (Android TV 11) since 2.24.0-preroll.2 — see [Status](#status).
 - Turn it on in the app: **Settings → Video Playback → Play Pre-Roll Before Movies** (off by default).
 
 ---
@@ -45,16 +45,17 @@ The pre-roll is **skipped** when:
 When the pre-roll ends the player goes straight into the movie (no "next in queue" countdown). A pre-roll is not
 reported to the server as a watch (checked in the server's play history after testing).
 
-## What changed (on top of upstream 2.24.0)
+## What changed (on top of upstream 2.25.0)
 
 ```
-d50e4a5  fork: pre-roll goes straight into the movie; none on resume
-7968dd6  fork: own application id and label so it installs beside upstream
-829fe06  fork: adapt #2483 to 2.24.0 Watch Together API
-d000c30  torp93: feat(plex): play the server-configured pre-roll before movies      (#2483)
-fe71c8f  torp93: feat(plex): allow prefixing play queues with cinema extras         (#2483)
-         + test stub fix, build script, this file
+dcccb37  fork: pre-roll goes straight into the movie; none on resume
+0e0d068  fork: own application id and label so it installs beside upstream
+51bdadf  fork: adapt #2483 to 2.24.0 Watch Together API
+2c0d09d  torp93: feat(plex): play the server-configured pre-roll before movies      (#2483)
+7e98e95  torp93: feat(plex): allow prefixing play queues with cinema extras         (#2483)
+         + test stub fix, build script, upstream watch, README header, this file
 ```
+(Hashes as of the 2.25.0 rebase; each upstream sync re-creates them.)
 
 | File | Change |
 |---|---|
@@ -64,7 +65,7 @@ fe71c8f  torp93: feat(plex): allow prefixing play queues with cinema extras     
 | `lib/screens/video_player/parts/playback_prompts.dart` | fork: a finished `clip` advances straight to the movie |
 | `lib/services/settings_service.dart`, `lib/screens/settings/playback_settings_screen.dart`, `lib/i18n/*` | the setting and its strings (#2483; generated files rebuilt with slang) |
 | `android/app/build.gradle.kts`, `AndroidManifest.xml`, two Kotlin files | fork: application id `com.edde746.plezy.preroll`, label *Plezy Pre-roll*, matching content-provider authorities |
-| `pubspec.yaml` | version `2.24.0-preroll.N` |
+| `pubspec.yaml` | version `<upstream>-preroll.N` |
 | `test/…` | #2483's tests; fork: `playlist_detail_screen_test.dart` stub takes the new parameter |
 | `scripts/fork-build-android.sh` | fork: one-command signed build |
 
@@ -80,7 +81,7 @@ fe71c8f  torp93: feat(plex): allow prefixing play queues with cinema extras     
 | Pixel: pre-roll → movie without a prompt | ✅ (fixed in preroll.2; preroll.1 showed "next in queue" + countdown) |
 | Pixel: resume a started movie → no pre-roll | ✅ (fixed in preroll.2; preroll.1 replayed the pre-roll) |
 | Pre-roll not recorded as watched | ✅ (server history after the tests) |
-| NVIDIA SHIELD (Android TV, D-pad, DV/Atmos passthrough) | ⏳ not tested yet |
+| NVIDIA SHIELD (Android TV, D-pad, DV/Atmos passthrough) | 🟡 installed and in daily use on the family room SHIELD since 2026-10-22 (2.24.0-preroll.2); no formal checklist run |
 | Collections / playlists / shuffle, Back or seek during pre-roll, other accounts | ⏳ not tested yet |
 
 Known limitations:
@@ -111,7 +112,7 @@ Then: sign in, **Settings → Video Playback → Play Pre-Roll Before Movies** o
 
 ## Building it yourself
 
-Versions match upstream CI (`.github/workflows/build.yml`) for 2.24.0.
+Versions match upstream CI (`.github/workflows/build.yml`) for 2.24.0 and 2.25.0.
 
 | Tool | Version | Where (on the build machine) |
 |---|---|---|
@@ -166,12 +167,28 @@ owner's account also watches upstream for releases and is subscribed to #2483.
 
 1. `git fetch upstream --tags`
 2. If #2483 (or an equivalent) has been merged upstream: stop — use the official app.
-3. `git checkout -b preroll-<new> <new-tag>` and `git cherry-pick 2.24.0..preroll` (the five commits above,
-   plus the later fork commits).
+3. `git checkout -b preroll-<new> <new-tag>` and `git cherry-pick <old-tag>..preroll` (all fork commits).
+   Set a git identity first (`GIT_AUTHOR_*`/`GIT_COMMITTER_*`), or the cherry-pick fails before it starts.
 4. Expect conflicts in `lib/i18n/strings*.g.dart` (generated): take the new tag's version, then
    `dart run slang`. Re-check anything the player code renamed (2.24.0 already renamed one parameter #2483
-   relied on).
-5. Bump `version:` in `pubspec.yaml` to `<new>-preroll.1+<build>`, run the tests, build, test on a device, release.
+   relied on). `pubspec.yaml` conflicts on `version:` in two commits: use `<new>-preroll.1+<upstream build>`.
+5. Bump `version:` in `pubspec.yaml` to `<new>-preroll.1+<build>`, run the tests, build, test on a device, release
+   (attach the APK **and** its `.sha256`; the SHIELD updater needs both).
+6. Move `preroll` to the new branch without rewriting it: on `preroll-<new>`, `git merge -s ours origin/preroll`
+   (keeps the new tree, records the old history as a parent), then `git push origin preroll-<new>:preroll`.
+7. Releasing is the approval: the family room SHIELD installs it by itself the following night (see below).
+
+## Auto-update on the SHIELD
+
+The app is sideloaded, so nothing updates it. A small container on the homelab (Komodo stack
+`plezy-shield-updater` on MS-02, source in the private Forgejo repo `chris_van_doren/plezy-shield-updater`) checks
+this repo's releases every 30 minutes. Between **02:00 and 05:59** (America/Chicago), if the SHIELD runs an older
+version and nothing is playing, it downloads the newest release's APK, checks it against the `.sha256` asset and runs
+`adb install -r` over network debugging (settings and sign-in are kept). Drafts are ignored, pre-releases count.
+Android itself rejects a different signing key, and `-r` without `-d` rejects downgrades.
+
+So the full path is: upstream release → watch issue here (and GitHub's email) → rebase, build, test, publish a
+release (by hand) → installed on the SHIELD overnight.
 
 ## Build log — what went wrong along the way
 
@@ -188,6 +205,8 @@ Recorded so the next update is quicker.
 | script's last step failed: `Unsupported command: …/36.1.0/apksigner` | the build installed a second build-tools version, so the glob matched two `apksigner`s | the script picks the newest |
 | preroll.1: "next in queue" countdown after the pre-roll | the clip went through the episode Play Next prompt | `d50e4a5`: a finished `clip` goes straight to the next item |
 | preroll.1: resuming a started movie replayed the pre-roll | no resume check | `d50e4a5`: skip when there is a saved/explicit start position |
+| 2.25.0 sync: `cherry-pick` aborted with "unable to auto-detect email address" | no git identity on the build machine | set `GIT_AUTHOR_*`/`GIT_COMMITTER_*` for the session |
+| 2.25.0 sync: `pubspec.yaml` conflicts in two commits | both fork commits touch `version:`; upstream bumped it | `2.25.0-preroll.1+157` (upstream's build number) |
 | `playlist_detail_screen_test.dart` did not compile | its `createPlayQueue` stub lacked the new parameter (the test is newer than the PR's base) | added `extrasPrefixCount` to the stub |
 
 Not done / ruled out:

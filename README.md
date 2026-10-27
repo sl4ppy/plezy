@@ -1,12 +1,45 @@
+# Plezy Pre-roll — a fork of Plezy that plays Plex pre-rolls
+
+> [!IMPORTANT]
+> **This is an unofficial fork of [edde746/plezy](https://github.com/edde746/plezy), not the official app.**
+> It is the current upstream Plezy release plus one feature, nothing else. Not affiliated with or endorsed by
+> the Plezy project. **Download builds from this fork's [Releases](../../releases)** — the store badges further
+> down are upstream's official app, which does *not* have this feature.
+
+### What this fork adds
+
+**Plex server pre-rolls before movies.** The short intro clips you configure on your Plex server
+(*Settings → Extras → Cinema Trailers pre-roll video*) play before a movie, the way Plex's own apps do.
+Official Plezy ignores them ([edde746/plezy#970](https://github.com/edde746/plezy/issues/970)).
+
+- Turn it on in the app: **Settings → Video Playback → Play Pre-Roll Before Movies** (off by default).
+- The server picks the clip, so a `;`-separated pre-roll list gives a random one each time.
+- Plays only when a movie starts **from the beginning**; resuming skips it. Goes straight into the movie afterwards,
+  with no "next in queue" countdown. Not for episodes, downloads, Watch Together, or existing queues
+  (collections, playlists, shuffle). The pre-roll is not recorded as watched.
+
+Based on upstream pull request [#2483](https://github.com/edde746/plezy/pull/2483) by @torp93 (still open upstream),
+plus fork fixes for the countdown and resume behaviour.
+
+### What else differs from upstream
+
+- **Android only** (arm64-v8a). Installs as **Plezy Pre-roll** (`com.edde746.plezy.preroll`) **next to** the
+  official app, with its own settings and sign-in.
+- **No in-app updates**: install newer fork releases yourself (`adb install -r` keeps your data).
+- Signed with the fork's own key, so it can't update over official Plezy or vice versa.
+
+Full details — every change, how it is built and tested, how it follows upstream releases, known limitations — are
+in **[FORK.md](FORK.md)**. Once upstream ships pre-roll support, use the official app instead; this fork exists
+only to bridge that gap.
+
+---
+
+*The upstream README follows, unchanged.*
+
 <h1>
   <img src="assets/plezy.png" alt="Plezy Logo" height="24" style="vertical-align: middle;" />
   Plezy
 </h1>
-
-> **This is a fork (branch `preroll`): Plezy 2.24.0 + Plex server pre-roll support
-> ([upstream #2483](https://github.com/edde746/plezy/pull/2483)), Android only, installed as "Plezy Pre-roll".
-> See [FORK.md](FORK.md) for what changed, how it is built and tested, and its limitations. Not affiliated with
-> the Plezy project.**
 
 A modern client for Plex, Jellyfin, and Emby on desktop, mobile, and TV. Built with Flutter for native performance and a clean interface.
 
