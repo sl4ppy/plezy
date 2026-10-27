@@ -74,7 +74,7 @@ dcccb37  fork: pre-roll goes straight into the movie; none on resume
 | Check | Result |
 |---|---|
 | #2483 unit tests (`test/services/play_queue_launcher_test.dart`) | ✅ 12/12 |
-| Full upstream test suite (preroll.2) | ✅ 8151 passed, 7 skipped; 1 failure = `memory_pressure_breadcrumbs_test.dart`, flaky (process-RSS timing) and failing on plain 2.24.0 too |
+| Full upstream test suite (2.25.0-preroll.1) | ✅ 8304 passed, 7 skipped; 1 failure = `memory_pressure_breadcrumbs_test.dart`, which fails on plain upstream 2.24.0 and 2.25.0 too (not fork code) |
 | `dart analyze` | ✅ no new issues vs. upstream 2.24.0 (the 49 pre-existing ones are in vendored packages) |
 | Server queue behaviour (`extrasPrefixCount`) | ✅ verified with curl against PMS |
 | Pixel 9 Pro XL: pre-roll before a fresh movie | ✅ |
